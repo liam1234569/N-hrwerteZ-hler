@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <!-- Wichtig für native Apps: Verhindert manuelles Zoomen durch den Nutzer -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fitness Tracker</title>
+    <style>
+        :root {
+            --bg-dark: #121212; 
+            --bg-card: #1a1a1c; 
+            --primary: #4CAF50; 
+            --primary-bg: #1b2d21;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --protein-color: #f44336; 
+            --carbs-color: #2196f3; 
+            --fat-color: #4CAF50; 
+            --bar-bg: #2c2c2e;
+        }
+
+        /* App-Feeling: Kein Text markieren, kein blaues Tap-Highlight */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        /* Overscroll none verhindert das "Federn" der Webseite am Rand */
+        body { 
+            background-color: var(--bg-dark); 
+            color: var(--text-main); 
+            padding: 15px; 
+            padding-bottom: env(safe-area-inset-bottom, 90px); /* Für Handys mit Gesten-Bar unten */
+            overscroll-behavior-y: none;
+        }
+
+        /* Eingabefelder müssen auswählbar bleiben */
+        input { user-select: auto; }
+
+        /* Allgemeine Klassen */
+        .hidden { display: none !important; }
+        .btn { 
+            background-color: var(--primary); 
+            color: #000; 
+            border: none; 
+            padding: 16px 20px; /* Etwas größer für besseres Tippen */
+            border-radius: 14px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 10px; 
+            font-size: 16px; 
+            transition: opacity 0.2s; 
+        }
+        .btn:active { opacity: 0.7; transform: scale(0.98); } /* Kleines Feedback beim Tippen */
+        .btn-outline { background-color: transparent; color: var(--primary); border: 2px solid var(--primary); }
+        .card { background-color: var(--bg-card); padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);}
+        
+        h2 { margin-bottom: 15px; font-size: 22px; font-weight: 700;}
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            margin-bottom: 12px; 
+            border-radius: 12px; 
+            border: 1px solid var(--bar-bg); 
+            background-color: var(--bg-dark); 
+            color: #fff; 
+            outline: none; 
+            font-size: 16px; 
+        }
+        input:focus { border-color: var(--primary); }
+
+        /* DASHBOARD DESIGN */
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .badge-stats { background-color: var(--primary-bg); color: var(--primary); padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+        .dots { color: var(--text-muted); font-size: 24px; letter-spacing: 2px; }
+
+        /* Kcal Ring - Responsive für schmale Displays */
+        .circle-container { display: flex; justify-content: center; margin-bottom: 30px; }
+        .progress-circle { 
+            width: 60vw; /* Passt sich der Handybreite an */
+            max-width: 240px;
+            height: 60vw; 
+            max-height: 240px;
+            border-radius: 50%; 
+            background: var(--bar-bg); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative; 
+        }
+        .circle-inner { 
+            width: calc(100% - 30px); /* Rand dicke */
+            height: calc(100% - 30px); 
+            background-color: var(--bg-card); 
+            border-radius: 50%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 10; 
+        }
+        .circle-inner h1 { font-size: 2.5rem; margin: 0; font-weight: 700; letter-spacing: -1px;}
+        .circle-inner p { color: var(--text-muted); font-size: 14px; margin-top: 2px; font-weight: 500;}
+
+        /* 3 Spalten Stats */
+        .summary-stats { display: flex; justify-content: space-between; text-align: center; margin-bottom: 30px; }
+        .stat-col { flex: 1; padding: 0 5px;}
+        .stat-col strong { display: block; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .stat-col p { color: var(--text-muted); font-size: 12px; font-weight: 500;}
+        .icon { font-size: 18px; margin-bottom: 4px; display: inline-block; }
+        .icon.green { color: var(--primary); }
+        .icon.orange { color: #ff9800; }
+
+        /* Makro Balken */
+        .macro-row { margin-bottom: 22px; }
+        .macro-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 10px; font-weight: 500;}
+        .macro-label { display: flex; align-items: center; gap: 10px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.red { background-color: var(--protein-color); }
+        .dot.blue { background-color: var(--carbs-color); }
+        .dot.green { background-color: var(--fat-color); }
+        .progress-bg { width: 100%; height: 8px; background-color: var(--bar-bg); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; width: 0%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fill-red { background-color: var(--protein-color); }
+        .fill-blue { background-color: var(--carbs-color); }
+        .fill-green { background-color: var(--fat-color); }
+
+        /* Essensliste */
+        .food-item { border-bottom: 1px solid var(--bar-bg); padding: 16px 0; }
+        .food-item:last-child { border-bottom: none; }
+        .food-name { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+        .food-macros { font-size: 13px; color: var(--text-muted); }
+
+        /* Bottom Bar */
+        .bottom-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: rgba(26, 26, 28, 0.95); 
+            backdrop-filter: blur(10px);
+            padding: 10px 15px calc(10px + env(safe-area-inset-bottom)); /* Safe Area Support */
+            display: flex; 
+            justify-content: space-between; 
+            gap: 12px; 
+            border-top: 1px solid var(--bar-bg); 
+            z-index: 50;
+        }
+        .bottom-bar button { padding: 14px 0; margin-top: 0; font-size: 15px; border-radius: 14px; font-weight: 600;}
+
+        /* Modal für Essen/Zutaten */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); padding: 20px; overflow-y: auto; z-index: 100; padding-bottom: 100px;}
+        .ingredient-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .ingredient-row input { margin-bottom: 0; font-size: 15px; padding: 12px; }
+        .temp-ingredients { font-size: 14px; margin-bottom: 25px; color: var(--text-muted); background: var(--bg-dark); padding: 15px; border-radius: 12px; line-height: 1.5;}
+    </style>
+</head>
+<body>
+
+    <!-- 1. SETUP SCREEN -->
+    <div id="setupScreen" class="hidden">
+        <div class="card" style="margin-top: 20px;">
+            <h2 style="color:var(--primary)">Ziel Einrichtung</h2>
+            <p style="margin-bottom:20px; color:var(--text-muted)">Gib deine täglichen Ziele ein:</p>
+            <input type="number" id="goalKcal" placeholder="Kcal (z.B. 2500)">
+            <input type="number" id="goalProtein" placeholder="Protein in g (z.B. 150)">
+            <input type="number" id="goalCarbs" placeholder="Kohlenhydrate in g (z.B. 300)">
+            <input type="number" id="goalFat" placeholder="Fett in g (z.B. 80)">
+            <button class="btn" onclick="saveGoals()" style="margin-top: 20px;">Ziele speichern</button>
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD SCREEN -->
+    <div id="dashboardScreen" class="hidden">
+        
+        <div class="card">
+            <div class="dash-header">
+                <span class="badge-stats">STATS</span>
+                <span class="dots">•••</span>
+            </div>
+
+            <!-- Kcal Ring -->
+            <div class="circle-container">
+                <div class="progress-circle" id="kcalCircle">
+                    <div class="circle-inner">
+                        <h1 id="txtKcalLeft">0</h1>
+                        <p>kcal übrig</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 Spalten (Ziel, Gegessen, Verbrannt) -->
+            <div class="summary-stats">
+                <div class="stat-col">
+                    <strong id="txtGoal">0</strong>
+                    <p>Ziel</p>
+                </div>
+                <div class="stat-col">
+                    <span class="icon green">🍴</span>
+                    <strong id="txtEaten">0</strong>
+                    <p>Gegessen</p>
+                </div>
+                <div class="stat-col">
+                    <span class="icon orange">🔥</span>
+                    <strong>0</strong>
+                    <p>Verbrannt</p>
+                </div>
+            </div>
+
+            <!-- Makros Balken -->
+            <div class="macro-row">
+                <div class="macro-header">
+                    <div class="macro-label"><span class="dot red"></span> Protein</div>
+                    <div id="txtPro">0 / 0g</div>
+                </div>
+                <div class="progress-bg"><div class="progress-fill fill-red" id="barPro"></div></div>
+            </div>
+            
+            <div class="macro-row">
+                <div class="macro-header">
+                    <div class="macro-label"><span class="dot blue"></span> Carbs</div>
+                    <div id="txtCarbs">0 / 0g</div>
+                </div>
+                <div class="progress-bg"><div class="progress-fill fill-blue" id="barCarbs"></div></div>
+            </div>
+            
+            <div class="macro-row">
+                <div class="macro-header">
+                    <div class="macro-label"><span class="dot green"></span> Fett</div>
+                    <div id="txtFat">0 / 0g</div>
+                </div>
+                <div class="progress-bg"><div class="progress-fill fill-green" id="barFat"></div></div>
+            </div>
+        </div>
+
+        <button class="btn" style="margin-bottom: 20px; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);" onclick="openFoodModal()">+ Essen hinzufügen</button>
+
+        <div class="card" style="margin-bottom: 90px;">
+            <h3 style="margin-bottom: 15px; font-size: 18px;">Heute gegessen</h3>
+            <div id="todayFoodList">
+                <!-- Wird per JS befüllt -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. ADD FOOD MODAL -->
+    <div id="foodModal" class="modal hidden">
+        <div class="card">
+            <h2 style="color:var(--primary)">Neues Essen</h2>
+            <input type="text" id="foodName" placeholder="Name des Essens (z.B. Frühstück)">
+            
+            <div style="background:var(--bar-bg); height:1px; margin: 20px 0;"></div>
+            
+            <h3 style="font-size: 18px; margin-bottom: 15px;">Zutaten hinzufügen</h3>
+            <div class="ingredient-row">
+                <input type="text" id="ingName" placeholder="Zutat" style="flex: 2;">
+                <input type="number" id="ingKcal" placeholder="Kcal" style="flex: 1;">
+            </div>
+            <div class="ingredient-row">
+                <input type="number" id="ingPro" placeholder="Pro (g)" style="flex: 1;">
+                <input type="number" id="ingCarbs" placeholder="Khd (g)" style="flex: 1;">
+                <input type="number" id="ingFat" placeholder="Fett (g)" style="flex: 1;">
+            </div>
+            <button class="btn btn-outline" style="margin-bottom: 20px;" onclick="addIngredient()">+ Zutat zur Liste</button>
+
+            <div class="temp-ingredients" id="tempIngredientsList">
+                Bisher keine Zutaten hinzugefügt.
+            </div>
+
+            <button class="btn" onclick="saveMeal()">Mahlzeit speichern</button>
+            <button class="btn" style="background:var(--bar-bg); color:#fff; margin-top: 15px;" onclick="closeFoodModal()">Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- 4. HISTORY SCREEN -->
+    <div id="historyScreen" class="hidden">
+        <div class="card" style="margin-top: 20px; margin-bottom: 90px;">
+            <h2 style="color:var(--primary); margin-bottom: 20px;">Verlauf (Letzte Tage)</h2>
+            <div id="historyList">
+                <!-- Wird per JS befüllt -->
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar" id="bottomBar" class="hidden">
+        <button class="btn" style="flex: 1;" onclick="showDashboard()">Heute</button>
+        <button class="btn" style="background-color: var(--bar-bg); color: #fff; flex: 1;" onclick="showHistory()">Verlauf</button>
+        <button class="btn" style="background-color: #e53935; color: white; flex: 1;" onclick="nextDay()">Next Day</button>
+    </div>
+
+    <script>
+        // State
+        let goals = JSON.parse(localStorage.getItem('goals')) || null;
+        let todayLog = JSON.parse(localStorage.getItem('todayLog')) || [];
+        let history = JSON.parse(localStorage.getItem('history')) || [];
+        let tempIngredients = [];
+
+        // Init App
+        function init() {
+            if (!goals) {
+                document.getElementById('setupScreen').classList.remove('hidden');
+                document.getElementById('bottomBar').classList.add('hidden');
+            } else {
+                showDashboard();
+                document.getElementById('bottomBar').classList.remove('hidden');
+            }
+        }
+
+        // Setup Speichern
+        function saveGoals() {
+            goals = {
+                kcal: Number(document.getElementById('goalKcal').value),
+                pro: Number(document.getElementById('goalProtein').value),
+                carbs: Number(document.getElementById('goalCarbs').value),
+                fat: Number(document.getElementById('goalFat').value)
+            };
+            localStorage.setItem('goals', JSON.stringify(goals));
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('bottomBar').classList.remove('hidden');
+            showDashboard();
+        }
+
+        // Dashboard & UI Updates
+        function showDashboard() {
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('historyScreen').classList.add('hidden');
+            updateStats();
+            renderFoodList();
+            window.scrollTo(0,0);
+        }
+
+        function updateStats() {
+            let eaten = { kcal: 0, pro: 0, carbs: 0, fat: 0 };
+            todayLog.forEach(food => {
+                eaten.kcal += food.kcal; eaten.pro += food.pro;
+                eaten.carbs += food.carbs; eaten.fat += food.fat;
+            });
+
+            // Kcal Berechnungen
+            let kcalLeft = Math.max(0, goals.kcal - eaten.kcal);
+            document.getElementById('txtKcalLeft').innerText = kcalLeft;
+            document.getElementById('txtGoal').innerText = goals.kcal;
+            document.getElementById('txtEaten').innerText = eaten.kcal;
+
+            // Kcal Ring füllen (Conic Gradient)
+            let kcalPercent = Math.min((eaten.kcal / goals.kcal) * 100, 100);
+            document.getElementById('kcalCircle').style.background = `conic-gradient(var(--primary) ${kcalPercent}%, var(--bar-bg) 0)`;
+
+            // Makros Text updaten (Gegessen / Ziel g)
+            document.getElementById('txtPro').innerText = `${eaten.pro} / ${goals.pro}g`;
+            document.getElementById('txtCarbs').innerText = `${eaten.carbs} / ${goals.carbs}g`;
+            document.getElementById('txtFat').innerText = `${eaten.fat} / ${goals.fat}g`;
+
+            // Makros Balken Breite updaten (mit leichtem Delay für die Animation)
+            setTimeout(() => {
+                let proPercent = Math.min((eaten.pro / goals.pro) * 100, 100);
+                let carbsPercent = Math.min((eaten.carbs / goals.carbs) * 100, 100);
+                let fatPercent = Math.min((eaten.fat / goals.fat) * 100, 100);
+
+                document.getElementById('barPro').style.width = proPercent + '%';
+                document.getElementById('barCarbs').style.width = carbsPercent + '%';
+                document.getElementById('barFat').style.width = fatPercent + '%';
+            }, 50);
+        }
+
+        function renderFoodList() {
+            const list = document.getElementById('todayFoodList');
+            list.innerHTML = '';
+            if(todayLog.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); font-size:15px; text-align:center; padding: 20px 10px;">Noch nichts gegessen.</p>';
+                return;
+            }
+            
+            todayLog.forEach(food => {
+                list.innerHTML += `
+                    <div class="food-item">
+                        <div class="food-name">${food.name}</div>
+                        <div class="food-macros">${food.kcal} Kcal | Pro: ${food.pro}g | Carbs: ${food.carbs}g | Fett: ${food.fat}g</div>
+                    </div>
+                `;
+            });
+        }
+
+        // Mahlzeiten & Zutaten Logik
+        function openFoodModal() {
+            document.getElementById('foodModal').classList.remove('hidden');
+            tempIngredients = [];
+            updateTempIngredients();
+        }
+
+        function closeFoodModal() {
+            document.getElementById('foodModal').classList.add('hidden');
+            document.getElementById('foodName').value = '';
+            document.getElementById('ingName').value = '';
+            document.getElementById('ingKcal').value = '';
+            document.getElementById('ingPro').value = '';
+            document.getElementById('ingCarbs').value = '';
+            document.getElementById('ingFat').value = '';
+        }
+
+        function addIngredient() {
+            let name = document.getElementById('ingName').value || 'Unbekannt';
+            let kcal = Number(document.getElementById('ingKcal').value) || 0;
+            let pro = Number(document.getElementById('ingPro').value) || 0;
+            let carbs = Number(document.getElementById('ingCarbs').value) || 0;
+            let fat = Number(document.getElementById('ingFat').value) || 0;
+
+            tempIngredients.push({name, kcal, pro, carbs, fat});
+            
+            document.getElementById('ingName').value = '';
+            document.getElementById('ingKcal').value = '';
+            document.getElementById('ingPro').value = '';
+            document.getElementById('ingCarbs').value = '';
+            document.getElementById('ingFat').value = '';
+            
+            updateTempIngredients();
+        }
+
+        function updateTempIngredients() {
+            const list = document.getElementById('tempIngredientsList');
+            if(tempIngredients.length === 0) {
+                list.innerHTML = 'Bisher keine Zutaten hinzugefügt.';
+                return;
+            }
+            list.innerHTML = '<strong style="color:#fff;">Zutaten:</strong><br>' + tempIngredients.map(ing => 
+                `• ${ing.name} <span style="color:var(--text-muted)">(${ing.kcal}kcal, ${ing.pro}P, ${ing.carbs}C, ${ing.fat}F)</span>`
+            ).join('<br>');
+        }
+
+        function saveMeal() {
+            let foodName = document.getElementById('foodName').value || 'Meine Mahlzeit';
+            if(tempIngredients.length === 0) {
+                alert("Bitte füge zuerst Zutaten hinzu!"); return;
+            }
+
+            let total = { kcal: 0, pro: 0, carbs: 0, fat: 0 };
+            tempIngredients.forEach(ing => {
+                total.kcal += ing.kcal; total.pro += ing.pro; total.carbs += ing.carbs; total.fat += ing.fat;
+            });
+
+            let newFood = {
+                name: foodName,
+                kcal: total.kcal, pro: total.pro, carbs: total.carbs, fat: total.fat,
+                ingredients: tempIngredients
+            };
+
+            todayLog.push(newFood);
+            localStorage.setItem('todayLog', JSON.stringify(todayLog));
+            closeFoodModal();
+            updateStats();
+            renderFoodList();
+        }
+
+        // Historie & Next Day
+        function nextDay() {
+            if(confirm("Bist du sicher, dass du den Tag abschließen möchtest? Alles wird auf 0 gesetzt.")) {
+                let dateStr = new Date().toLocaleDateString('de-DE');
+                
+                let eaten = { kcal: 0, pro: 0, carbs: 0, fat: 0 };
+                todayLog.forEach(food => {
+                    eaten.kcal += food.kcal; eaten.pro += food.pro;
+                    eaten.carbs += food.carbs; eaten.fat += food.fat;
+                });
+
+                history.unshift({
+                    date: dateStr,
+                    eaten: eaten,
+                    goals: goals
+                });
+
+                if(history.length > 14) history.pop();
+                localStorage.setItem('history', JSON.stringify(history));
+
+                todayLog = [];
+                localStorage.setItem('todayLog', JSON.stringify(todayLog));
+                
+                showDashboard();
+            }
+        }
+
+        function showHistory() {
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.remove('hidden');
+            window.scrollTo(0,0);
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            
+            if(history.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding: 20px;">Noch keine vergangenen Tage gespeichert.</p>';
+                return;
+            }
+
+            history.forEach(day => {
+                list.innerHTML += `
+                    <div style="background:var(--bg-dark); padding:18px; border-radius:16px; margin-bottom:15px; border: 1px solid var(--bar-bg);">
+                        <h3 style="color:#fff; margin-bottom:8px; font-size:18px;">${day.date}</h3>
+                        <p style="font-size:14px; color:var(--text-muted); margin-bottom: 12px; font-weight: 500;">
+                            Ziel: ${day.goals.kcal} Kcal | Gegessen: <span style="color:var(--primary)">${day.eaten.kcal} Kcal</span>
+                        </p>
+                        <div style="font-size:14px; display:flex; justify-content:space-between; color:#fff; font-weight: 500;">
+                            <span>Pro: ${day.eaten.pro}g</span>
+                            <span>Carbs: ${day.eaten.carbs}g</span>
+                            <span>Fett: ${day.eaten.fat}g</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
