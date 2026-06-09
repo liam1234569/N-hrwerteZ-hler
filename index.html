@@ -49,6 +49,13 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
+        /* Wenn die Desktop-Ansicht auf dem Handy erzwungen wird */
+        body.force-desktop {
+            min-width: 1250px;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* --- INTRO SCREEN --- */
         #introOverlay {
             position: fixed;
@@ -93,38 +100,46 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* --- THEME TOGGLE BUTTON --- */
-        .theme-toggle {
+        /* --- TOP CONTROL BUTTONS --- */
+        .controls-container {
             position: absolute;
             top: 20px;
             right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 90;
+        }
+
+        .theme-toggle, .layout-toggle {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            padding: 10px;
-            border-radius: 50%;
+            padding: 10px 14px;
+            border-radius: 20px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 90;
+            font-size: 14px;
+            font-weight: 600;
         }
-        .theme-toggle:hover { transform: scale(1.05); }
+        .theme-toggle { border-radius: 50%; padding: 10px; }
+        .theme-toggle:hover, .layout-toggle:hover { transform: scale(1.05); }
 
-        /* --- PERFEKT ZENTRIERTES INTERACTIVE LAYOUT --- */
+        /* --- LAYOUT CONFIGURATION --- */
         .page-layout {
             position: relative;
             display: flex;
-            justify-content: center; /* Hält den Rechner exakt in der Bildschirmmitte */
+            justify-content: center; /* Hält den Rechner auf Desktop exakt mittig */
             align-items: center;
             width: 100%;
             max-width: 1400px;
             min-height: 80vh;
         }
 
-        /* Die Sidebar dockt ganz links an, ohne Platz vom Rechner wegzunehmen */
+        /* Sidebar verhält sich auf Desktop schwebend links */
         .ad-sidebar {
             position: absolute;
             left: 20px;
@@ -137,7 +152,6 @@
             z-index: 10;
         }
 
-        /* Cleanes Design wie im Screenshot: Nur das Bild mit Schatten & Rundung */
         .ad-card {
             position: relative;
             width: 100%;
@@ -167,7 +181,6 @@
             object-fit: cover;
         }
 
-        /* Geschwungene weiße Schrift direkt UNTEN LINKS auf dem Bild */
         .ad-title {
             position: absolute;
             bottom: 15px;
@@ -175,13 +188,12 @@
             font-family: 'Brush Script MT', 'Caveat', 'Segoe Script', cursive;
             font-size: 32px;
             color: #ffffff;
-            /* Ein feiner Schatten sorgt dafür, dass man die Schrift auch auf hellen Bildern perfekt lesen kann */
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8); 
             line-height: 1;
-            pointer-events: none; /* Klicks gehen durch den Text direkt auf das Bild */
+            pointer-events: none;
         }
 
-        /* HAUPT CONTAINER (Bleibt absolut unberührt in der Mitte) */
+        /* HAUPT CONTAINER */
         .container {
             background: var(--card-bg);
             backdrop-filter: blur(16px);
@@ -196,15 +208,23 @@
             z-index: 5;
         }
 
-        /* Responsive Anpassung für kleinere Bildschirme (Tablets & Mobile) */
+        /* --- MOBILE ANPASSUNG (Greift nur, wenn NICHT force-desktop aktiv ist) --- */
         @media (max-width: 1200px) {
-            .page-layout {
+            body:not(.force-desktop) .page-layout {
                 flex-direction: column;
                 align-items: center;
                 gap: 40px;
                 min-height: auto;
             }
-            .ad-sidebar {
+
+            /* Rechner wird nach oben geschoben */
+            body:not(.force-desktop) .container {
+                order: 1; 
+            }
+
+            /* Werbung geht nach ganz unten unter den Rechner */
+            body:not(.force-desktop) .ad-sidebar {
+                order: 2; 
                 position: static;
                 transform: none;
                 width: 100%;
@@ -214,11 +234,11 @@
                 gap: 16px;
                 padding: 0 10px;
             }
-            body { padding-bottom: 80px; }
+            body:not(.force-desktop) { padding-bottom: 100px; }
         }
 
         @media (max-width: 650px) {
-            .ad-sidebar {
+            body:not(.force-desktop) .ad-sidebar {
                 grid-template-columns: 1fr;
             }
         }
@@ -377,389 +397,4 @@
 
         .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
         .metric-badge { background: var(--box-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 14px; text-align: center; }
-        .metric-badge label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .metric-badge .val { font-size: 16px; font-weight: 800; }
-
-        /* --- FOOTER ELEMENTS --- */
-        .watermark, .formula-btn {
-            position: fixed; bottom: 15px; background: var(--card-bg); color: var(--text-muted);
-            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            border: 1px solid var(--card-border); box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 100; cursor: pointer; transition: all 0.2s ease;
-        }
-        .formula-btn { left: 15px; }
-        .watermark { right: 15px; }
-        .watermark:hover, .formula-btn:hover { color: var(--text-main); transform: translateY(-2px); }
-
-        .disclaimer {
-            position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-            color: var(--text-muted); font-size: 11px; text-align: center;
-            max-width: 40%; line-height: 1.4; pointer-events: none; z-index: 10;
-        }
-
-        @media (max-width: 1450px) { .disclaimer { display: none; } }
-
-        /* --- MODAL SYSTEM --- */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 20px;
-        }
-        .modal.open { opacity: 1; pointer-events: auto; }
-        .modal-content {
-            background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main);
-            padding: 30px; border-radius: 24px; max-width: 550px; width: 100%;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4); max-height: 80vh; overflow-y: auto;
-        }
-        .modal-content h2 { font-size: 22px; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 6px; }
-        .modal-content h4 { margin-top: 18px; color: var(--primary); font-size: 14px; }
-        .modal-content p, .modal-content li { font-size: 14px; line-height: 1.6; margin-top: 6px; color: var(--text-muted); }
-        .modal-content strong { color: var(--text-main); }
-        .modal-content a { color: var(--primary); text-decoration: none; font-weight: bold; }
-        .modal-content a:hover { text-decoration: underline; }
-        .code-block {
-            background: var(--box-bg); padding: 10px 14px; border-left: 3px solid var(--primary);
-            font-family: monospace; font-size: 13px; margin: 8px 0; border-radius: 0 8px 8px 0; color: var(--text-main);
-        }
-        .close-btn {
-            display: block; width: 100%; background: var(--input-border); color: var(--text-main);
-            border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer;
-            margin-top: 20px; transition: background 0.2s;
-        }
-        .close-btn:hover { background: rgba(255,255,255,0.15); }
-    </style>
-</head>
-<body>
-
-<button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
-
-<div id="introOverlay">
-    <div id="introText">Herzlich Willkommen</div>
-    <div id="introSpinner" class="spinner"></div>
-</div>
-
-<div class="page-layout">
-    
-    <div class="ad-sidebar" id="adSidebar">
-        </div>
-
-    <div class="container">
-        <h1>Premium Kalorien- & Makrorechner</h1>
-        
-        <form id="calForm">
-            <h3>1. Körperdaten</h3>
-            <div class="form-group">
-                <label>Geschlecht</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="geschlecht" value="m" checked> Männlich</label>
-                    <label><input type="radio" name="geschlecht" value="w"> Weiblich</label>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label for="gewicht">Gewicht (kg)</label>
-                    <input type="number" id="gewicht" required min="30" max="250" placeholder="z.B. 75">
-                </div>
-                <div class="form-group">
-                    <label for="groesse">Größe (cm)</label>
-                    <input type="number" id="groesse" required min="100" max="250" placeholder="z.B. 180">
-                </div>
-                <div class="form-group">
-                    <label for="alter">Alter (Jahre)</label>
-                    <input type="number" id="alter" required min="10" max="100" placeholder="z.B. 22">
-                </div>
-            </div>
-
-            <h3>2. Alltagsbewegung</h3>
-            <div class="form-group">
-                <label for="schritte">Schritte pro 24h</label>
-                <input type="number" id="schritte" required min="0" max="50000" placeholder="z.B. 10000">
-            </div>
-
-            <h3>3. Aktives Training</h3>
-            <div class="row">
-                <div class="form-group">
-                    <label for="trainingsMinuten">Minuten pro Trainingstag</label>
-                    <input type="number" id="trainingsMinuten" required min="0" max="300" placeholder="z.B. 60">
-                </div>
-                <div class="form-group">
-                    <label for="trainingsTage">Tage pro Woche Sport</label>
-                    <input type="number" id="trainingsTage" required min="0" max="7" placeholder="z.B. 3">
-                </div>
-            </div>
-
-            <h3>4. Dein Ziel</h3>
-            <div class="form-group">
-                <label for="ziel">Ziel auswählen</label>
-                <select id="ziel">
-                    <option value="0" selected>Gewicht halten</option>
-                    <option value="-400">Abnehmen (-400 kcal)</option>
-                    <option value="300">Zunehmen (+300 kcal)</option>
-                </select>
-            </div>
-
-            <div class="toggle-group">
-                <label style="margin-bottom:0; cursor:pointer;" for="rememberData">Eingaben lokal auf diesem Gerät merken</label>
-                <label class="switch">
-                    <input type="checkbox" id="rememberData">
-                    <span class="slider"></span>
-                </label>
-            </div>
-
-            <button type="submit" class="btn-submit">Bedarf berechnen</button>
-        </form>
-
-        <div class="results" id="resultsBox">
-            <h2>Deine persönliche Auswertung:</h2>
-            
-            <div class="badge-grid">
-                <div class="metric-badge">
-                    <label>Dein BMI</label>
-                    <div class="val" id="resBmi">-</div>
-                </div>
-                <div class="metric-badge">
-                    <label>Wasserbedarf / Tag</label>
-                    <div class="val" id="resWasser" style="color: #3b82f6;">-</div>
-                </div>
-            </div>
-
-            <div class="details-box">
-                <div class="details-row"><span>Grundumsatz:</span><span id="resGrund">0 kcal</span></div>
-                <div class="details-row"><span>Energie durch Schritte:</span><span id="resSchritte">0 kcal</span></div>
-                <div class="details-row"><span>Energie durch Sport (Schnitt):</span><span id="resSport">0 kcal</span></div>
-                <div class="details-row"><span>Thermischer Effekt (TEF):</span><span id="resTef">0 kcal</span></div>
-                <div class="details-row total"><span>Empfohlene Tageskalorien:</span><span id="resGesamt">0 kcal</span></div>
-            </div>
-
-            <div class="macro-container">
-                <div class="macro-row">
-                    <div class="macro-header p-color"><span>Protein (Eiweiß)</span><span id="resProtein">0g</span></div>
-                    <div class="progress-bar-bg"><div class="progress-fill p-fill" id="barProtein"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-header c-color"><span>Kohlenhydrate</span><span id="resCarbs">0g</span></div>
-                    <div class="progress-bar-bg"><div class="progress-fill c-fill" id="barCarbs"></div></div>
-                </div>
-                <div class="macro-row">
-                    <div class="macro-header f-color"><span>Fett</span><span id="resFett">0g</span></div>
-                    <div class="progress-bar-bg"><div class="progress-fill f-fill" id="barFett"></div></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="formula-btn" id="openModalBtn">Formeln</div>
-<div class="disclaimer">
-    Hinweis: Für die exakte Richtigkeit der berechneten Daten sowie mögliche gesundheitliche Folgen übernehmen wir keine Haftung.
-    Daten werden nicht online gespeichert!
-</div>
-<div class="watermark" id="openCreatorBtn">Created by @liam1234569</div>
-
-<div class="modal" id="formulaModal">
-    <div class="modal-content">
-        <h2>Verwendete Formeln & Logik</h2>
-        <h4>1. Grundumsatz (Mifflin-St. Jeor Formel)</h4>
-        <div class="code-block">
-            Männer: (10 × kg) + (6.25 × cm) - (5 × Jahre) + 5<br>
-            Frauen: (10 × kg) + (6.25 × cm) - (5 × Jahre) - 161
-        </div>
-        <h4>2. Alltagsbewegung & Sport</h4>
-        <p>Schritte: <strong>Schritte × Gewicht × 0.00055</strong></p>
-        <p>Sport-Schnitt pro Tag: <strong>(Minuten × 6 kcal × Trainingstage) / 7</strong></p>
-        <h4>3. BMI (Body-Mass-Index)</h4>
-        <div class="code-block">BMI = Gewicht / (Größe in m)²</div>
-        <h4>4. Makronährstoff-Aufteilung</h4>
-        <ul>
-            <li><strong>Protein:</strong> 2,0 Gramm pro kg Körpergewicht</li>
-            <li><strong>Fett:</strong> 1,0 Gramm pro kg Körpergewicht</li>
-            <li><strong>Kohlenhydrate:</strong> Füllen die restlichen Zielkalorien auf.</li>
-        </ul>
-        <button class="close-btn" id="closeModalBtn">Schließen</button>
-    </div>
-</div>
-
-<div class="modal" id="creatorModal">
-    <div class="modal-content" style="text-align: center;">
-        <h2>Über den Entwickler</h2>
-        <p style="margin: 15px 0;"><strong>Entwickelt von:</strong> @liam1234569</p>
-        <p><strong>Kontakt:</strong> <a href="mailto:liam1234569@creater.de">liam1234569@creater.de</a></p>
-        <button class="close-btn" id="closeCreatorBtn">Zurück zum Rechner</button>
-    </div>
-</div>
-
-<script src="ads-config.js"></script>
-
-<script>
-    const themeToggle = document.getElementById('themeToggle');
-    let currentTheme = localStorage.getItem('theme') || 'dark';
-    
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    themeToggle.innerText = currentTheme === 'dark' ? '☀️' : '🌙';
-
-    themeToggle.addEventListener('click', () => {
-        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        localStorage.setItem('theme', currentTheme);
-        themeToggle.innerText = currentTheme === 'dark' ? '☀️' : '🌙';
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-        const introOverlay = document.getElementById('introOverlay');
-        const introText = document.getElementById('introText');
-        const introSpinner = document.getElementById('introSpinner');
-
-        setTimeout(() => { introText.style.opacity = '1'; }, 200);
-
-        setTimeout(() => {
-            introText.style.opacity = '0';
-            setTimeout(() => {
-                introText.innerText = 'zu deinem Kalorien- & Makrorechner';
-                introText.style.opacity = '1';
-            }, 500);
-        }, 1600);
-
-        setTimeout(() => {
-            introText.style.opacity = '0';
-            setTimeout(() => {
-                introText.style.display = 'none';
-                introSpinner.style.opacity = '1';
-            }, 500);
-        }, 3400);
-
-        setTimeout(() => {
-            introOverlay.style.opacity = '0';
-            introOverlay.style.visibility = 'hidden';
-            setTimeout(() => { introOverlay.style.display = 'none'; }, 600);
-            
-            if (localStorage.getItem('cal_remember') === 'true') {
-                document.getElementById('rememberData').checked = true;
-                document.getElementById('gewicht').value = localStorage.getItem('cal_gewicht');
-                document.getElementById('groesse').value = localStorage.getItem('cal_groesse');
-                document.getElementById('alter').value = localStorage.getItem('cal_alter');
-                document.getElementById('schritte').value = localStorage.getItem('cal_schritte');
-                document.getElementById('trainingsMinuten').value = localStorage.getItem('cal_tminuten');
-                document.getElementById('trainingsTage').value = localStorage.getItem('cal_ttage');
-                document.getElementById('ziel').value = localStorage.getItem('cal_ziel');
-                if (localStorage.getItem('cal_geschlecht') === 'w') {
-                    document.querySelector('input[name="geschlecht"][value="w"]').checked = true;
-                }
-            }
-        }, 4600);
-
-        // --- HIER WIRD DIE WERBUNG JETZT PASSEND ZUM SCREENSHOT GENERIERT ---
-        const adSidebar = document.getElementById('adSidebar');
-        if (typeof adsConfig !== 'undefined' && adsConfig.length > 0) {
-            adsConfig.forEach(ad => {
-                const adCard = document.createElement('div');
-                adCard.className = 'ad-card';
-                adCard.innerHTML = `
-                    <a href="${ad.link}" target="_blank" class="ad-link" title="Webseite öffnen">
-                        <img src="${ad.image}" alt="${ad.name}" class="ad-image">
-                        <span class="ad-title">${ad.name}</span>
-                    </a>
-                `;
-                adSidebar.appendChild(adCard);
-            });
-        } else {
-            adSidebar.style.display = 'none';
-        }
-    });
-
-    function setupModal(modalId, openBtnId, closeBtnId) {
-        const modal = document.getElementById(modalId);
-        const openBtn = document.getElementById(openBtnId);
-        const closeBtn = document.getElementById(closeBtnId);
-        openBtn.addEventListener('click', () => modal.classList.add('open'));
-        closeBtn.addEventListener('click', () => modal.classList.remove('open'));
-        window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
-    }
-    setupModal('formulaModal', 'openModalBtn', 'closeModalBtn');
-    setupModal('creatorModal', 'openCreatorBtn', 'closeCreatorBtn');
-
-    document.getElementById('calForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const geschlecht = document.querySelector('input[name="geschlecht"]:checked').value;
-        const gewicht = parseFloat(document.getElementById('gewicht').value);
-        const groesse = parseFloat(document.getElementById('groesse').value);
-        const alter = parseInt(document.getElementById('alter').value);
-        const schritte = parseInt(document.getElementById('schritte').value);
-        const tMinuten = parseInt(document.getElementById('trainingsMinuten').value);
-        const tTage = parseInt(document.getElementById('trainingsTage').value);
-        const zielDefizit = parseFloat(document.getElementById('ziel').value);
-
-        const remember = document.getElementById('rememberData').checked;
-        localStorage.setItem('cal_remember', remember);
-        if (remember) {
-            localStorage.setItem('cal_geschlecht', geschlecht);
-            localStorage.setItem('cal_gewicht', gewicht);
-            localStorage.setItem('cal_groesse', groesse);
-            localStorage.setItem('cal_alter', alter);
-            localStorage.setItem('cal_schritte', schritte);
-            localStorage.setItem('cal_tminuten', tMinuten);
-            localStorage.setItem('cal_ttage', tTage);
-            localStorage.setItem('cal_ziel', zielDefizit);
-        } else {
-            localStorage.clear();
-            localStorage.setItem('theme', currentTheme);
-        }
-
-        let grundumsatz = (10 * gewicht) + (6.25 * groesse) - (5 * alter);
-        grundumsatz += (geschlecht === 'm') ? 5 : -161;
-
-        const kalorienSchritte = schritte * gewicht * 0.00055;
-        const kalorienSportProTag = (tMinuten * 6 * tTage) / 7;
-        const temporaerUmsatz = grundumsatz + kalorienSchritte + kalorienSportProTag;
-        const tef = temporaerUmsatz * 0.085;
-
-        const zielKalorien = temporaerUmsatz + tef + zielDefizit;
-
-        const proteinG = gewicht * 2;
-        const fettG = gewicht * 1; 
-        const proteinKcal = proteinG * 4;
-        const fettKcal = fettG * 9;
-        
-        let restKcal = zielKalorien - (proteinKcal + fettKcal);
-        if (restKcal < 0) restKcal = 0;
-        const carbsG = restKcal / 4;
-
-        const bmi = gewicht / ((groesse / 100) ** 2);
-        let bmiFarbe = '#10b981';
-        if (bmi < 18.5 || bmi >= 25) bmiFarbe = '#f59e0b';
-        if (bmi >= 30) bmiFarbe = '#ef4444';
-
-        const wasserLiter = (gewicht * 0.035) + ((tMinuten * tTage / 7) * 0.01);
-
-        document.getElementById('resGrund').innerText = Math.round(grundumsatz) + ' kcal';
-        document.getElementById('resSchritte').innerText = Math.round(kalorienSchritte) + ' kcal';
-        document.getElementById('resSport').innerText = Math.round(kalorienSportProTag) + ' kcal';
-        document.getElementById('resTef').innerText = Math.round(tef) + ' kcal';
-        document.getElementById('resGesamt').innerText = Math.round(zielKalorien) + ' kcal';
-
-        document.getElementById('resProtein').innerText = Math.round(proteinG) + 'g';
-        document.getElementById('resFett').innerText = Math.round(fettG) + 'g';
-        document.getElementById('resCarbs').innerText = Math.round(carbsG) + 'g';
-
-        const bmiRes = document.getElementById('resBmi');
-        bmiRes.innerText = bmi.toFixed(1);
-        bmiRes.style.color = bmiFarbe;
-
-        document.getElementById('resWasser').innerText = wasserLiter.toFixed(1) + ' Liter';
-
-        document.getElementById('resultsBox').style.display = 'block';
-        
-        setTimeout(() => {
-            const gesamtMakroKcal = proteinKcal + fettKcal + restKcal;
-            document.getElementById('barProtein').style.width = ((proteinKcal / gesamtMakroKcal) * 100) + '%';
-            document.getElementById('barCarbs').style.width = ((restKcal / gesamtMakroKcal) * 100) + '%';
-            document.getElementById('barFett').style.width = ((fettKcal / gesamtMakroKcal) * 100) + '%';
-        }, 50);
-    });
-</script>
-
-</body>
-</html>
+        .metric-badge label { display: block; font-size: 11px;
