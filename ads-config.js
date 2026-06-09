@@ -12,4 +12,9 @@ const adsConfig = [
         image: "4522ff2b-e7de-4e3c-8bb9-d84b622b46bb.png",
         link: "https://liam1234569.github.io/Tech/"
     },
+    {
+        name: "Nahrungsergänzungsmittel & Vitalstoffe",
+        image: "",
+        link: "https://www.ndfgssuefusgfskfisgekfbskdakuwdgeskfsuwakdgkfkasduwdswfkjgfwie.de/dakdaod"
+    },
 ]
