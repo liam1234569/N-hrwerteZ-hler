@@ -14,7 +14,7 @@ const adsConfig = [
     },
     {
         name: "Nahrungsergänzungsmittel & Vitalstoffe",
-        image: "",
+        image: "b02d1fef-e2b8-4046-ac9e-042af1beb5ef.png",
         link: "https://www.ndfgssuefusgfskfisgekfbskdakuwdgeskfsuwakdgkfkasduwdswfkjgfwie.de/dakdaod"
     },
 ]
